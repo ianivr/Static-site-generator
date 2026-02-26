@@ -5,6 +5,7 @@ from functions import (
     extract_markdown_links,
     split_nodes_image,
     split_nodes_link,
+    text_to_textnodes,
 )
 from textnode import TextNode, TextType
 
@@ -192,6 +193,21 @@ class TestFunctions(unittest.TestCase):
                 TextNode("second link", TextType.LINK, "https://www.test.com"),
             ],
             new_nodes,
+        )
+
+    def test_text_to_textnodes(self):
+        text = "This is **bold** text with a [link](https://www.example.com) and an ![image](https://i.imgur.com/zjjcJKZ.png)"
+        nodes = text_to_textnodes(text)
+        self.assertListEqual(
+            [
+                TextNode("This is ", TextType.TEXT),
+                TextNode("bold", TextType.BOLD),
+                TextNode(" text with a ", TextType.TEXT),
+                TextNode("link", TextType.LINK, "https://www.example.com"),
+                TextNode(" and an ", TextType.TEXT),
+                TextNode("image", TextType.IMAGE, "https://i.imgur.com/zjjcJKZ.png"),
+            ],
+            nodes,
         )
 
 
