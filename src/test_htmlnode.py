@@ -32,7 +32,7 @@ class TestHTMLNode(unittest.TestCase):
         self.assertEqual(node.to_html(), "Just text")
 
     def test_leaf_to_html_no_value(self):
-        node = LeafNode("p", "")
+        node = LeafNode("p", None)
         with self.assertRaises(ValueError):
             node.to_html()
 
