@@ -2,6 +2,8 @@ from block import BlockType, block_to_block_type
 from textnode import TextNode, TextType, text_node_to_html_node
 import re
 from htmlnode import ParentNode
+import os
+import shutil
 
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
@@ -155,3 +157,21 @@ def markdown_to_html_node(markdown):
         block_nodes.append(node)
 
     return ParentNode("div", block_nodes)
+
+
+def copy_directory(src, dst):
+    # Delete destination directory if it exists and recreate it
+    if os.path.exists(dst):
+        shutil.rmtree(dst)
+    os.mkdir(dst)
+
+    for item in os.listdir(src):
+        src_path = os.path.join(src, item)
+        dst_path = os.path.join(dst, item)
+
+        if os.path.isfile(src_path):
+            print(f"Copying file: {src_path} -> {dst_path}")
+            shutil.copy(src_path, dst_path)
+        else:
+            print(f"Copying directory: {src_path} -> {dst_path}")
+            copy_directory(src_path, dst_path)
