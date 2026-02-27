@@ -103,11 +103,12 @@ def text_to_textnodes(text):
 
 def markdown_to_blocks(markdown):
     blocks = markdown.split("\n\n")
+    result = []
     for block in blocks:
         block = block.strip()
-        if block == "":
-            blocks.remove(block)
-    return blocks
+        if block != "":
+            result.append(block)
+    return result
 
 
 def text_to_children(text):
@@ -128,9 +129,12 @@ def markdown_to_html_node(markdown):
             node = ParentNode(f"h{level}", text_to_children(text))
 
         elif block_type == BlockType.CODE:
-            # strip the ``` delimiters and newlines
-            code_text = block[4:-3]  # removes "```\n" at start and "```" at end
-            code_node = text_node_to_html_node(TextNode(code_text, TextType.CODE))
+            code_text = block[3:-3].strip(
+                "\n"
+            )  # quita los ``` de ambos lados y el primer/último \n
+            code_node = text_node_to_html_node(
+                TextNode(code_text + "\n", TextType.CODE)
+            )
             node = ParentNode("pre", [code_node])
 
         elif block_type == BlockType.QUOTE:
@@ -152,7 +156,8 @@ def markdown_to_html_node(markdown):
             node = ParentNode("ol", items)
 
         else:  # PARAGRAPH
-            node = ParentNode("p", text_to_children(block))
+            text = " ".join(block.split("\n"))
+            node = ParentNode("p", text_to_children(text))
 
         block_nodes.append(node)
 
@@ -175,3 +180,31 @@ def copy_directory(src, dst):
         else:
             print(f"Copying directory: {src_path} -> {dst_path}")
             copy_directory(src_path, dst_path)
+
+
+def extract_title(markdown):
+    lines = markdown.split("\n")
+    for line in lines:
+        if line.startswith("# "):
+            return line[2:].strip()
+    raise Exception("No title found in markdown")
+
+
+def generate_page(from_path, template_path, dest_path):
+    print(f"Generating page from {from_path} to {dest_path} using {template_path}")
+
+    with open(from_path) as f:
+        markdown = f.read()
+
+    with open(template_path) as f:
+        template = f.read()
+
+    html_content = markdown_to_html_node(markdown).to_html()
+    title = extract_title(markdown)
+
+    page = template.replace("{{ Title }}", title).replace("{{ Content }}", html_content)
+
+    os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+
+    with open(dest_path, "w") as f:
+        f.write(page)

@@ -8,6 +8,7 @@ from functions import (
     text_to_textnodes,
     markdown_to_blocks,
     markdown_to_html_node,
+    extract_title,
 )
 from textnode import TextNode, TextType
 
@@ -212,8 +213,8 @@ class TestFunctions(unittest.TestCase):
             nodes,
         )
 
-        def test_markdown_to_blocks(self):
-            md = """
+    def test_markdown_to_blocks(self):
+        md = """
 This is **bolded** paragraph
 
 This is another paragraph with _italic_ text and `code` here
@@ -222,15 +223,15 @@ This is the same paragraph on a new line
 - This is a list
 - with items
 """
-            blocks = markdown_to_blocks(md)
-            self.assertEqual(
-                blocks,
-                [
-                    "This is **bolded** paragraph",
-                    "This is another paragraph with _italic_ text and `code` here\nThis is the same paragraph on a new line",
-                    "- This is a list\n- with items",
-                ],
-            )
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(
+            blocks,
+            [
+                "This is **bolded** paragraph",
+                "This is another paragraph with _italic_ text and `code` here\nThis is the same paragraph on a new line",
+                "- This is a list\n- with items",
+            ],
+        )
 
     def test_paragraphs(self):
         md = """
@@ -263,6 +264,21 @@ the **same** even with inline stuff
             html,
             "<div><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>",
         )
+
+    def test_extract_title(self):
+        md = """# This is the title
+This is the first paragraph.
+This is the second paragraph.
+"""
+        title = extract_title(md)
+        self.assertEqual(title, "This is the title")
+
+    
+    def test_extract_title_no_title(self):
+        md = """This is the first paragraph.
+This is the second paragraph."""
+        with self.assertRaises(Exception):
+            extract_title(md)
 
 
 if __name__ == "__main__":
