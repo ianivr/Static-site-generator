@@ -1,5 +1,7 @@
-from textnode import TextNode, TextType
+from block import BlockType, block_to_block_type
+from textnode import TextNode, TextType, text_node_to_html_node
 import re
+from htmlnode import ParentNode
 
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
@@ -104,3 +106,52 @@ def markdown_to_blocks(markdown):
         if block == "":
             blocks.remove(block)
     return blocks
+
+
+def text_to_children(text):
+    text_nodes = text_to_textnodes(text)
+    return [text_node_to_html_node(tn) for tn in text_nodes]
+
+
+def markdown_to_html_node(markdown):
+    blocks = markdown_to_blocks(markdown)
+    block_nodes = []
+
+    for block in blocks:
+        block_type = block_to_block_type(block)
+
+        if block_type == BlockType.HEADING:
+            level = len(block) - len(block.lstrip("#"))
+            text = block[level + 1 :]  # skip "# "
+            node = ParentNode(f"h{level}", text_to_children(text))
+
+        elif block_type == BlockType.CODE:
+            # strip the ``` delimiters and newlines
+            code_text = block[4:-3]  # removes "```\n" at start and "```" at end
+            code_node = text_node_to_html_node(TextNode(code_text, TextType.CODE))
+            node = ParentNode("pre", [code_node])
+
+        elif block_type == BlockType.QUOTE:
+            lines = block.split("\n")
+            stripped = "\n".join(line.lstrip(">").strip() for line in lines)
+            node = ParentNode("blockquote", text_to_children(stripped))
+
+        elif block_type == BlockType.UNORDERED_LIST:
+            lines = block.split("\n")
+            items = [ParentNode("li", text_to_children(line[2:])) for line in lines]
+            node = ParentNode("ul", items)
+
+        elif block_type == BlockType.ORDERED_LIST:
+            lines = block.split("\n")
+            items = [
+                ParentNode("li", text_to_children(re.sub(r"^\d+\. ", "", line)))
+                for line in lines
+            ]
+            node = ParentNode("ol", items)
+
+        else:  # PARAGRAPH
+            node = ParentNode("p", text_to_children(block))
+
+        block_nodes.append(node)
+
+    return ParentNode("div", block_nodes)
