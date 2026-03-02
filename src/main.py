@@ -1,12 +1,13 @@
-from textnode import TextNode, TextType
 from functions import copy_directory, generate_pages_recursive
+import sys
+
 
 def main():
-    node = TextNode("Hello, World!", TextType.LINK, url="https://example.com")
-    print(node)
+    basepath = sys.argv[1] if len(sys.argv) > 1 else "/"
 
-    copy_directory("static", "public")
-    generate_pages_recursive("content", "template.html", "public")
+    copy_directory("static", "docs")
+    generate_pages_recursive("content", "template.html", "docs", basepath)
+
 
 if __name__ == "__main__":
     main()
